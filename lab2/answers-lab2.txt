@@ -1,0 +1,20 @@
+Question1
+    变量value使用了*解析地址，所以x的类型是uinitptr_t的。
+
+Question2
+
+
+Question3
+    通过分页机制来保护内核地址，lab中通过将PTE_U置为0，那么用户就不能访问这个页。
+
+Question4
+    由于PTSIZE为4MB，它用来存放所有页的PageInfo，其中每个PageInfo的sizeof(struct PageInfo)=8B。所以它存放了512K个PageInfo，即有512K个physical page。其中每个physical page的size=4KB，所以总的占512K*4KB=2GB物理内存。
+
+Question5
+    在这种情况下，首先存放所有PageInfo，即需要PTSIZE 4MB，其次，是存放目录，page director 4KB，还有 page table的512K*4B=2MB。所以总的需要6.004MB空间。
+    我们可以使用large page来分解这样的overhead。
+
+Question6
+    当entry.S中的跳转指令jmp *eax完成后，就已经把EIP的值设为了寄存器eax中的值，也就大于了KERNBASE。
+    因为虚拟地址中的0～4MB与KERNBASE～KERNBASE+4MB都映射到了物理地址的0～4MB上，所以仍可执行。
+    如果不这样做的话，那么只能映射高位的地址，则虚拟地址上的0～4MB将会出错。

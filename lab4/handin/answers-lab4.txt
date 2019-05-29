@@ -1,0 +1,25 @@
+Q1：
+    Compare ‘kern/mpentry.S’ side by side with ‘boot/boot.S’. Bearing in mind that ‘kern/mpentry.S’ is compiled and linked to run above ‘KERNBASE’ just like everything else in the kernel, what is the purpose of macro MPBOOTPHYS? Why is it necessary in ’‘kern/mpentry.S’ but not in ‘boot/boot.S’? In other words, what could go wrong if it were omitted in ‘kern/mpentry.S’? 
+    Hint: recall the differences between the link address and the load address that we have discussed in Lab 1.
+
+Answer1:
+    它用来计算内存中的绝对地址。如果没有MPBOOTPHYS，所有地址现在都将在虚拟内存的用户空间中，因为代码已经在保护模式下运行。
+
+Q2:
+    It seems that using the big kernel lock guarantees that only one CPU can run the kernel code at a time. Why do we still need separate kernel stacks for each CPU? Describe a scenario in which using a shared kernel stack will go wrong, even with the protection of the big kernel lock.
+
+Answer2:
+    例如此时有甲乙两个CPU都在用户态运行程序，此时甲获得了一个lock，然后进入内核态，但是如果此时乙产生了一个interrupt，然后进行handler，此时会将一些状态（参数）push到栈（内核的）上，从而导致“污染了”甲正在使用的一些参数。
+
+Q3:
+    In your implementation of ‘env_run()’ you should have called ‘lcr3()’. Before and after the call to ‘lcr3()’, your code makes references (at least it should) to the variable ‘e’, the argument to ‘env_run’. Upon loading the %cr3 register, the addressing context used by the MMU is instantly changed. But a virtual address (namely ‘e’) has meaning relative to a given address context--the address context specifies the physical address to which the virtual address maps. Why can the pointer ‘e’ be dereferenced both before and after the addressing switch?
+
+Answer3:
+    因为这个‘e’是保存在内核栈上且内核地址是固定的，且lab3中实现的‘env_setup_vm()’函数的实现中，可以它与内核页表的切换是相同的，所以两个页目录的‘e’都映射到同一物理地址。
+
+Q4：
+    Whenever the kernel switches from one environment to another, it must ensure the old environment's registers are saved so they can be restored properly later. Why? Where does this happen?
+
+Answer4:
+    当一个进程进入内核，它会保存当前运行信息(保存在内核栈上)；但从内核态回到用户态时，它将恢复这些信息，保证该进程继续正确地执行。
+    在lab4中，保存是发生在trapentry.S的_alltraps中；而恢复是在env.c的‘env_pop_tf()’中。
